@@ -1,0 +1,21 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.fixAll.dart": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.dart": "explicit"
+    }
+  },
+  "dart.flutterSdkPath": "C:/Users/IFPR/develop/flutter",
+  "workbench.colorTheme": "Studio Dark Theme",
+  "workbench.secondarySideBar.defaultVisibility": "visible",
+  "editor.fontFamily": "JetBrains Mono",
+  "editor.fontSize": 14,
+  "editor.fontLigatures": "true",
+  "workbench.iconTheme": "vscode-jetbrains-icon-theme-2023-dark"
+}
