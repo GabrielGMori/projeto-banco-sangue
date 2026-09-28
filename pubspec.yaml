@@ -36,6 +36,12 @@ dependencies:
   cupertino_icons: ^1.0.8
   sqflite: ^2.4.2+1
   path_provider: ^2.1.6
+  
+  flutter_map: ^6.0.0          # Interactive OpenStreetMap viewer
+  latlong2: ^0.9.0             # Latitude & Longitude helper
+  geolocator: ^10.0.0          # Gets user's GPS coordinates
+
+  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:

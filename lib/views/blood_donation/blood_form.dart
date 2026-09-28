@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
-import 'package:projeto_banco_sangue/views/type_row.dart';
+import 'package:projeto_banco_sangue/views/blood_donation/type_row.dart';
 
 class FormScreen extends StatelessWidget {
   BloodDonation? donation;

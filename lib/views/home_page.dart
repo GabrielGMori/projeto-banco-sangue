@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation_dao.dart';
-import 'package:projeto_banco_sangue/views/blood_form.dart';
-import 'package:projeto_banco_sangue/views/filters.dart';
-import 'package:projeto_banco_sangue/views/use_form.dart';
+import 'package:projeto_banco_sangue/views/blood_donation/blood_form.dart';
+import 'package:projeto_banco_sangue/views/blood_donation/filters.dart';
+import 'package:projeto_banco_sangue/views/blood_donation/use_form.dart';
+import 'package:projeto_banco_sangue/views/map_test.dart';
 
-import 'blood_tile.dart';
+import 'blood_donation/blood_tile.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key, donations});
@@ -102,7 +103,9 @@ class _HomePageState extends State<HomePage> {
   void editDonation(BloodDonation donation) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => FormScreen(donation: donation)),
+      MaterialPageRoute(
+        builder: (context) => RealMapScreen(),
+      ), // FormScreen(donation: donation)),
     );
     if (result != null) {
       await widget.dao.update(result);
