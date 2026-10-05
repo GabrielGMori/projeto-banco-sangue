@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static Database? _database;
-  static const int _version = 1;
+  static const int _version = 2; // Incrementado para version 2
   static const String _dbName = 'itao.db';
 
   DatabaseHelper._privateConstructor();
@@ -15,8 +15,9 @@ class DatabaseHelper {
     String path = join(documentsDir, _dbName);
     return openDatabase(
       path,
-      onCreate: _createDb,
       version: _version,
+      onCreate: _createDb,
+      onUpgrade: _onUpgrade,
       onConfigure: (db) async => await db.execute('pragma foreign_keys = on'),
     );
   }
@@ -36,5 +37,29 @@ class DatabaseHelper {
         date_used text
       )
     ''');
+
+    await db.execute('''
+      create table donation_sites (
+        id integer primary key autoincrement,
+        nome text not null,
+        endereco text not null,
+        latitude real not null,
+        longitude real not null
+      )
+    ''');
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        create table donation_sites (
+          id integer primary key autoincrement,
+          nome text not null,
+          endereco text not null,
+          latitude real not null,
+          longitude real not null
+        )
+      ''');
+    }
   }
 }

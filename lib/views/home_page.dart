@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RealMapScreen(),
+        builder: (context) => MapTestScreen(),
       ), // FormScreen(donation: donation)),
     );
     if (result != null) {

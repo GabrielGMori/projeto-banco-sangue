@@ -36,7 +36,7 @@ class BloodDonation {
 
   String getTypeRH() {
     final rh = this.rh == RhFactor.positive ? '+' : '-';
-    return '${this.type.name}$rh';
+    return '${type.name}$rh';
   }
 
   factory BloodDonation.fromMap(Map<String, dynamic> json) => BloodDonation(

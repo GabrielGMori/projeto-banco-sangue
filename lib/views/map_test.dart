@@ -3,157 +3,170 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:projeto_banco_sangue/model/donation_site.dart/donation_site.dart';
-import 'package:projeto_banco_sangue/model/donation_site.dart/donation_site_service.dart';
+import 'package:projeto_banco_sangue/model/donation_site.dart/donation_site_dao.dart';
 
-class RealMapScreen extends StatefulWidget {
-  const RealMapScreen({super.key});
+class MapTestScreen extends StatefulWidget {
+  const MapTestScreen({super.key});
 
   @override
-  State<RealMapScreen> createState() => _RealMapScreenState();
+  State<MapTestScreen> createState() => _MapTestScreenState();
 }
 
-class _RealMapScreenState extends State<RealMapScreen> {
+class _MapTestScreenState extends State<MapTestScreen> {
   final MapController _mapController = MapController();
-  LatLng? _userPosition;
-  List<DonationSite> _postosList = [];
-  DonationSite? _selectedPosto;
+  final DonationSiteDao _siteDao = const DonationSiteDao();
 
-  bool _isLoadingLocation = true;
-  bool _isLoadingPostos = false;
+  Position? _currentPosition;
+  List<DonationSite> _savedSites = [];
+
+  LatLng? _selectedLatLng;
+  DonationSite? _selectedSavedSite;
+
+  bool _isLoading = true;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _initLocationAndFetchPostos();
+    _initMap();
   }
 
-  Future<void> _initLocationAndFetchPostos() async {
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  /// Inicializa GPS e carrega os postos salvos via DAO
+  Future<void> _initMap() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      // 1. Obtém GPS do Usuário
-      Position pos = await Geolocator.getCurrentPosition(
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) throw Exception('Serviço de GPS desativado.');
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Permissão de GPS negada.');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Permissão negada permanentemente.');
+      }
+
+      final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      final userLocation = LatLng(pos.latitude, pos.longitude);
+      final sites = await _siteDao.getSites();
 
-      setState(() {
-        _userPosition = userLocation;
-        _isLoadingLocation = false;
-        _isLoadingPostos = true;
-      });
-
-      // 2. Busca Postos Reais Próximos via Overpass API
-      List<DonationSite> postos = await DonationSiteService.fetchNearbyPostos(
-        pos.latitude,
-        pos.longitude,
-      );
-
-      setState(() {
-        _postosList = postos;
-        _isLoadingPostos = false;
-      });
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+          _savedSites = sites;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoadingLocation = false;
-        _isLoadingPostos = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  String _calculateDistance(DonationSite posto) {
-    if (_userPosition == null) return '-- km';
-    double distanceInMeters = Geolocator.distanceBetween(
-      _userPosition!.latitude,
-      _userPosition!.longitude,
-      posto.latitude,
-      posto.longitude,
-    );
-    return '${(distanceInMeters / 1000).toStringAsFixed(1)} km';
-  }
+  /// Exibe modal para registrar o posto no ponto clicado
+  void _openRegisterDialog() {
+    if (_selectedLatLng == null) return;
 
-  void _selectPosto(DonationSite posto) {
-    setState(() => _selectedPosto = posto);
-    _mapController.move(LatLng(posto.latitude, posto.longitude), 15.5);
-    _showDetailsBottomSheet(posto);
-  }
+    final nomeController = TextEditingController();
+    final enderecoController = TextEditingController();
 
-  void _showDetailsBottomSheet(DonationSite posto) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      posto.nome,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _calculateDistance(posto),
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+              const Text(
+                'Cadastrar Novo Posto de Doação',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 18,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      posto.endereco,
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                ],
+              Text(
+                'Lat: ${_selectedLatLng!.latitude.toStringAsFixed(5)}, Lng: ${_selectedLatLng!.longitude.toStringAsFixed(5)}',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nomeController,
+                decoration: const InputDecoration(
+                  labelText: 'Nome do Posto / Hospital',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.local_hospital),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: enderecoController,
+                decoration: const InputDecoration(
+                  labelText: 'Endereço Completo',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.place),
+                ),
               ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
+                height: 48,
                 child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  icon: const Icon(Icons.bloodtype),
-                  label: const Text('REGISTRAR DOAÇÃO NESTE POSTO'),
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    // Aqui você chama a função para salvar no banco de dados (Supabase/Firebase)
+                  icon: const Icon(Icons.save),
+                  label: const Text('SALVAR POSTO'),
+                  onPressed: () async {
+                    if (nomeController.text.trim().isEmpty) return;
+
+                    final newSite = DonationSite(
+                      id: DateTime.now().millisecondsSinceEpoch,
+                      nome: nomeController.text.trim(),
+                      endereco: enderecoController.text.trim().isEmpty
+                          ? 'Endereço não informado'
+                          : enderecoController.text.trim(),
+                      latitude: _selectedLatLng!.latitude,
+                      longitude: _selectedLatLng!.longitude,
+                    );
+
+                    await _siteDao.add(newSite);
+                    final updatedList = await _siteDao.getSites();
+
+                    if (mounted) {
+                      setState(() {
+                        _savedSites = updatedList;
+                        _selectedLatLng = null;
+                      });
+                      Navigator.of(ctx).pop();
+                    }
                   },
                 ),
               ),
@@ -161,119 +174,197 @@ class _RealMapScreenState extends State<RealMapScreen> {
           ),
         );
       },
-    ).then((_) => setState(() => _selectedPosto = null));
+    );
+  }
+
+  /// Remove o posto selecionado
+  Future<void> _deleteSite(DonationSite site) async {
+    await _siteDao.remove(site);
+    final updatedList = await _siteDao.getSites();
+    setState(() {
+      _savedSites = updatedList;
+      _selectedSavedSite = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoadingLocation) {
-      return const Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: Colors.red),
-              SizedBox(height: 12),
-              Text('Obtendo sua localização GPS...'),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Postos Próximos (${_postosList.length})'),
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
+        title: const Text('Gerenciar Postos de Doação'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _isLoading ? null : _initMap,
+          ),
+        ],
       ),
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _userPosition ?? const LatLng(-25.4284, -49.2733),
-              initialZoom: 13.0,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.blood_donation_app',
+          if (_currentPosition != null)
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: LatLng(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                ),
+                initialZoom: 15.0,
+                minZoom: 10.0,
+                maxZoom: 18.0,
+                onTap: (_, point) {
+                  setState(() {
+                    _selectedSavedSite = null;
+                    _selectedLatLng = point;
+                  });
+                },
               ),
-              MarkerLayer(
-                markers: [
-                  // Marcador do Usuário
-                  if (_userPosition != null)
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.projeto_banco_sangue',
+                ),
+                MarkerLayer(
+                  markers: [
+                    // Posição Atual
                     Marker(
-                      point: _userPosition!,
-                      width: 30,
-                      height: 30,
+                      point: LatLng(
+                        _currentPosition!.latitude,
+                        _currentPosition!.longitude,
+                      ),
+                      width: 50,
+                      height: 50,
                       child: const Icon(
                         Icons.my_location,
                         color: Colors.blueAccent,
-                        size: 28,
+                        size: 30,
                       ),
                     ),
-                  // Marcadores de Postos Reais
-                  ..._postosList.map((posto) {
-                    final isSelected = _selectedPosto?.placeId == posto.placeId;
-                    return Marker(
-                      point: LatLng(posto.latitude, posto.longitude),
-                      width: isSelected ? 48 : 36,
-                      height: isSelected ? 48 : 36,
-                      child: GestureDetector(
-                        onTap: () => _selectPosto(posto),
-                        child: Icon(
-                          Icons.location_on,
-                          color: isSelected ? Colors.redAccent : Colors.red,
-                          size: isSelected ? 48 : 36,
+
+                    // Ponto Temporário Selecionado no Toque
+                    if (_selectedLatLng != null)
+                      Marker(
+                        point: _selectedLatLng!,
+                        width: 50,
+                        height: 50,
+                        child: const Icon(
+                          Icons.add_location_alt,
+                          color: Colors.orange,
+                          size: 44,
                         ),
                       ),
-                    );
-                  }),
-                ],
-              ),
-            ],
-          ),
 
-          // Indicador de Carregamento dos Postos sobre o Mapa
-          if (_isLoadingPostos)
+                    // Postos Cadastrados no Banco
+                    ..._savedSites.map((site) {
+                      final isSelected = _selectedSavedSite?.id == site.id;
+                      return Marker(
+                        point: LatLng(site.latitude, site.longitude),
+                        width: isSelected ? 50 : 40,
+                        height: isSelected ? 50 : 40,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedLatLng = null;
+                              _selectedSavedSite = site;
+                            });
+                          },
+                          child: Icon(
+                            Icons.location_on,
+                            color: isSelected
+                                ? Colors.red.shade900
+                                : Colors.red,
+                            size: isSelected ? 48 : 38,
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ],
+            ),
+
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
+
+          if (_errorMessage != null && !_isLoading)
             Positioned(
-              top: 16,
-              left: 16,
-              right: 16,
+              top: 20,
+              left: 20,
+              right: 20,
               child: Card(
-                elevation: 4,
+                color: Colors.red.shade100,
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    children: const [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.red,
-                        ),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+            ),
+
+          // Botão para Cadastrar Novo Posto
+          if (_selectedLatLng != null)
+            Positioned(
+              bottom: 30,
+              left: 20,
+              right: 20,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.add),
+                label: const Text('CADASTRAR NESTE PONTO'),
+                onPressed: _openRegisterDialog,
+              ),
+            ),
+
+          // Detalhes do Posto Selecionado
+          if (_selectedSavedSite != null)
+            Positioned(
+              bottom: 30,
+              left: 20,
+              right: 20,
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _selectedSavedSite!.nome,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteSite(_selectedSavedSite!),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 12),
-                      Text('Buscando hospitais e hemocentros reais...'),
+                      Text(
+                        _selectedSavedSite!.endereco,
+                        style: TextStyle(color: Colors.grey.shade700),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.red,
-        child: const Icon(Icons.my_location),
-        onPressed: () {
-          if (_userPosition != null) {
-            _mapController.move(_userPosition!, 14.0);
-          }
-        },
       ),
     );
   }
