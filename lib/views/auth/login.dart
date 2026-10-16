@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:projeto_banco_sangue/model/auth/user.dart';
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+  final FlutterSecureStorage storage;
+  LoginScreen({super.key, required this.storage});
 
   @override
   Widget build(BuildContext context) {
@@ -105,14 +107,14 @@ class _LoginViewState extends State<LoginView> {
                   if (_formKey.currentState!.validate()) {
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(const SnackBar(content: Text('Salvando')));
-                    Navigator.pop(
-                      context,
-                      User(
-                        id: int.parse(_registrationController.text),
-                        password: _passwordController.text,
-                      ),
-                    );
+                    ).showSnackBar(const SnackBar(content: Text('Autenticando')));
+                    // Navigator.pop(
+                    //   context,
+                    //   User(
+                    //     id: int.parse(_registrationController.text),
+                    //     password: _passwordController.text,
+                    //   ),
+                    // );
                   }
                 },
                 child: const Text("Salvar doação de sangue"),

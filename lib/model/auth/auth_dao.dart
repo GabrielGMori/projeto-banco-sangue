@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 class AuthDAO {
   const AuthDAO();
-  Future<User?> findById(int id) async {
+  Future<User?> findByRegistration(int id) async {
     Database db = await DatabaseHelper.instance.database;
     var query = await db.query('users', where: "id = ?", whereArgs: [id]);
     if (query.isNotEmpty) {
@@ -15,7 +15,7 @@ class AuthDAO {
 
   Future<int> add(User newUser) async {
     Database db = await DatabaseHelper.instance.database;
-    if (newUser.id != null && newUser.id! > 0) {
+    if (newUser.id > 0) {
       return await update(newUser);
     }
     return await db.insert('users', newUser.toMap());
