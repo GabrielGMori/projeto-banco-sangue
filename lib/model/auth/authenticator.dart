@@ -4,9 +4,10 @@ import 'package:projeto_banco_sangue/model/auth/auth_dao.dart';
 import 'package:projeto_banco_sangue/model/auth/user.dart';
 
 class Authenticator {
-  final FlutterSecureStorage storage;
+  final FlutterSecureStorage storage = FlutterSecureStorage();
   final AuthDAO dao = AuthDAO();
-  Authenticator({required this.storage});
+
+  Authenticator();
 
   String encryptPassword(String password) {
     return BCrypt.hashpw(password, BCrypt.gensalt());
@@ -16,24 +17,44 @@ class Authenticator {
     return BCrypt.checkpw(password, hashed);
   }
 
-  Future<bool> authenticate(int registration, String password) async {
-    User? user = await dao.findByRegistration(registration);
+  Future<bool> authenticate(String registration, String password) async {
+    User? user = await dao.findByRegistration(int.parse(registration));
 
-    if(user == null) {
+    if (user == null) {
       return false;
     }
 
-    if(!compare(password, user.password)) {
+    if (!compare(password, user.password)) {
       return false;
     }
 
-    storage.write(key: 'logged', value: 'true');
-    storage.write(key: 'userRegistration', value: registration.toString());
-    storage.write(key: 'username', value: user.name);
+    await storage.write(key: 'logged', value: 'true');
+    await storage.write(
+      key: 'userRegistration',
+      value: registration.toString(),
+    );
+    await storage.write(key: 'username', value: user.name);
     return true;
   }
 
-  void logout() {
-    storage.deleteAll();
+  Future<void> logout() async {
+    await storage.deleteAll();
+  }
+
+  Future<void> excludeAccount() async {
+    String? registration = await storage.read(key: 'userRegistration');
+    await dao.remove(User(id: int.parse(registration!), name: '', password: ''));
+    return;
+  }
+
+  Future<void> updatePassword(String text) async {
+    String hashed = encryptPassword(text);
+    String? registration = await storage.read(key: 'userRegistration');
+    User? user = await dao.findByRegistration(int.parse(registration!));
+
+    if(user == null) return;
+
+    user.password = hashed;
+    await dao.update(user);
   }
 }

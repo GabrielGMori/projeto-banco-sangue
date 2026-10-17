@@ -1,3 +1,4 @@
+import 'package:bcrypt/bcrypt.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -36,5 +37,18 @@ class DatabaseHelper {
         date_used text
       )
     ''');
+
+    await db.execute('''
+      create table users (
+        id integer primary key,
+        name text not null,
+        password text not null
+      )
+    ''');
+
+    String hashedPassword = BCrypt.hashpw('1', BCrypt.gensalt());
+    await db.execute(
+      'insert into users(id, name, password) values (1, "josé", "$hashedPassword")',
+    );
   }
 }

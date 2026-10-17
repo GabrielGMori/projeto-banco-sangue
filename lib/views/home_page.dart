@@ -7,6 +7,7 @@ import 'package:projeto_banco_sangue/views/auth/login.dart';
 import 'package:projeto_banco_sangue/views/use_form.dart';
 
 import 'blood_tile.dart';
+import 'itao_scaffold.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key, donations});
@@ -23,31 +24,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 20,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Itaó+",
-              style: TextStyle(color: Theme.of(context).colorScheme.surface),
-            ),
-            Text(
-              "Banco de doação de sangue",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.surface,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surfaceTint,
-      ),
+    return ItaoScaffold(
       floatingActionButton: AppFloatingActionsButton(
         onChanged: () => setState(() {}),
       ),
-      body: Center(
+      child: Center(
         child: Column(
           children: [
             FiltersDropdown(

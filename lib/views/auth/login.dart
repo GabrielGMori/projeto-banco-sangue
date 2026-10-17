@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:projeto_banco_sangue/model/auth/authenticator.dart';
 import 'package:projeto_banco_sangue/model/auth/user.dart';
+import 'package:projeto_banco_sangue/views/auth/auth_middleware.dart';
 
 class LoginScreen extends StatelessWidget {
   final FlutterSecureStorage storage;
+
   LoginScreen({super.key, required this.storage});
 
   @override
@@ -103,18 +106,38 @@ class _LoginViewState extends State<LoginView> {
                 },
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(
+                    bool authenticated = await Authenticator().authenticate(
+                      _registrationController.text,
+                      _passwordController.text,
+                    );
+
+                    if (!authenticated) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(Icons.error, color: Theme.of(context).colorScheme.surface,),
+                              const SizedBox(width: 10,),
+                              const Expanded(
+                                child: Text(
+                                  'Matrícula ou senha inválidos, tente novamente.',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                      return;
+                    }
+
+                    Navigator.pushReplacement(
                       context,
-                    ).showSnackBar(const SnackBar(content: Text('Autenticando')));
-                    // Navigator.pop(
-                    //   context,
-                    //   User(
-                    //     id: int.parse(_registrationController.text),
-                    //     password: _passwordController.text,
-                    //   ),
-                    // );
+                      MaterialPageRoute(builder: (context) => AuthMiddleware()),
+                    );
                   }
                 },
                 child: const Text("Salvar doação de sangue"),

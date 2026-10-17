@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 class AuthDAO {
   const AuthDAO();
+
   Future<User?> findByRegistration(int id) async {
     Database db = await DatabaseHelper.instance.database;
     var query = await db.query('users', where: "id = ?", whereArgs: [id]);
@@ -23,6 +24,9 @@ class AuthDAO {
 
   Future<int> remove(User user) async {
     Database db = await DatabaseHelper.instance.database;
+    if (user.id == 1) {
+      return 0;
+    }
     return await db.delete('users', where: 'id = ?', whereArgs: [user.id]);
   }
 
