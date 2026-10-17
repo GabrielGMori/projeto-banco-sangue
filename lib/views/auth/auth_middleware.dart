@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../home_page.dart';
+import '../donations/home_page.dart';
 import 'login.dart';
 
 class AuthMiddleware extends StatelessWidget {

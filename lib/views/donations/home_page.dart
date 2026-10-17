@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation_dao.dart';
-import 'package:projeto_banco_sangue/views/blood_form.dart';
-import 'package:projeto_banco_sangue/views/filters.dart';
+import 'package:projeto_banco_sangue/views/donations/blood_form.dart';
+import 'package:projeto_banco_sangue/views/components/filters.dart';
 import 'package:projeto_banco_sangue/views/auth/login.dart';
-import 'package:projeto_banco_sangue/views/use_form.dart';
+import 'package:projeto_banco_sangue/views/donations/use_form.dart';
 
 import 'blood_tile.dart';
-import 'itao_scaffold.dart';
+import '../itao_scaffold.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key, donations});

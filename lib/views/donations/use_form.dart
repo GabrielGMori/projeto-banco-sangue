@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
-import 'package:projeto_banco_sangue/views/type_row.dart';
 
-class FormScreen extends StatelessWidget {
-  BloodDonation? donation;
+class UseDonationFormScreen extends StatelessWidget {
+  BloodDonation donation;
 
-  FormScreen({super.key, this.donation});
+  UseDonationFormScreen({super.key, required this.donation});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
         titleSpacing: 20,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,48 +30,43 @@ class FormScreen extends StatelessWidget {
         ),
         backgroundColor: Theme.of(context).colorScheme.surfaceTint,
       ),
-      body: BloodForm(donation: donation),
+      body: UseForm(donation: donation),
     );
   }
 }
 
-class BloodForm extends StatefulWidget {
-  BloodDonation? donation;
+class UseForm extends StatefulWidget {
+  BloodDonation donation;
 
-  BloodForm({super.key, this.donation});
+  UseForm({super.key, required this.donation});
 
   @override
-  State<BloodForm> createState() => _BloodFormState();
+  State<UseForm> createState() => _UseFormState();
 }
 
-class _BloodFormState extends State<BloodForm> {
+class _UseFormState extends State<UseForm> {
   final _formKey = GlobalKey<FormState>();
 
-  final _donatorController = TextEditingController();
+  final _granteeController = TextEditingController();
   final _dateTimeDonationController = TextEditingController();
-  BloodType? selectedType = BloodType.A;
-  RhFactor? selectedFactor = RhFactor.positive;
   DateTime? _selectedDateTime;
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.donation != null) {
-      _donatorController.text = widget.donation!.donator;
-      selectedFactor = widget.donation!.rh;
-      selectedType = widget.donation!.type;
-      _selectedDateTime = widget.donation!.dateDonation;
-    } else {
-      _selectedDateTime = DateTime.now();
-    }
+    _granteeController.text = widget.donation.grantee ?? '';
+    _selectedDateTime = widget.donation.dateDonation.isAfter(DateTime.now())
+        ? widget.donation.dateDonation
+        : DateTime.now();
+
     _dateTimeDonationController.text =
         "${_selectedDateTime!.day}/${_selectedDateTime!.month}/${_selectedDateTime!.year}";
   }
 
   @override
   void dispose() {
-    _donatorController.dispose();
+    _granteeController.dispose();
     _dateTimeDonationController.dispose();
     super.dispose();
   }
@@ -79,8 +74,8 @@ class _BloodFormState extends State<BloodForm> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? selectedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      initialDate: widget.donation.dateDonation,
+      firstDate: widget.donation.dateDonation,
       lastDate: DateTime(2100),
     );
 
@@ -104,13 +99,13 @@ class _BloodFormState extends State<BloodForm> {
             spacing: 20,
             children: [
               TextFormField(
-                controller: _donatorController,
+                controller: _granteeController,
                 decoration: const InputDecoration(
-                  label: Text("Nome do doador"),
+                  label: Text("Nome do donatário"),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Digite o doador';
+                    return 'Digite o donatário';
                   }
                   return null;
                 },
@@ -126,7 +121,7 @@ class _BloodFormState extends State<BloodForm> {
                       ).colorScheme.inversePrimary,
                     ),
                     child: Text(
-                      "Selecione a data de doação",
+                      "Selecione a data de uso",
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.scrim,
                       ),
@@ -135,32 +130,20 @@ class _BloodFormState extends State<BloodForm> {
                   Text(_dateTimeDonationController.text),
                 ],
               ),
-              TypeRow(
-                selectedType: selectedType,
-                selectedFactor: selectedFactor,
-                onChanged: (type, factor) {
-                  setState(() {
-                    selectedType = type;
-                    selectedFactor = factor;
-                  });
-                },
-              ),
+
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(const SnackBar(content: Text('Salvando')));
-                    Navigator.pop(
-                      context,
-                      BloodDonation(
-                        id: widget.donation?.id,
-                        type: selectedType ?? BloodType.A,
-                        donator: _donatorController.text,
-                        rh: selectedFactor ?? RhFactor.positive,
-                        dateDonation: _selectedDateTime,
-                      ),
+
+                    widget.donation.use(
+                      _granteeController.text,
+                      _selectedDateTime,
                     );
+
+                    Navigator.pop(context, widget.donation);
                   }
                 },
                 child: const Text("Salvar doação de sangue"),

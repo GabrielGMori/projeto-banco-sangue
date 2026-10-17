@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:projeto_banco_sangue/model/auth/authenticator.dart';
-import 'package:projeto_banco_sangue/views/home_page.dart';
+import 'package:projeto_banco_sangue/views/donations/home_page.dart';
 
 import '../model/auth/user.dart';
 import 'auth/login.dart';
@@ -69,6 +69,7 @@ class ItaoScaffold extends StatelessWidget {
     return Scaffold(
       floatingActionButton: floatingActionButton,
       appBar: AppBar(
+        foregroundColor: Colors.white,
         titleSpacing: 20,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
