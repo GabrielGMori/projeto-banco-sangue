@@ -14,6 +14,12 @@ class AuthDAO {
     return null;
   }
 
+  Future<List<User>> findAll() async {
+    Database db = await DatabaseHelper.instance.database;
+    var query = await db.query('users');
+    return query.map((map) => User.fromMap(map)).toList();
+  }
+
   Future<int> add(User newUser) async {
     Database db = await DatabaseHelper.instance.database;
     if (newUser.id > 0) {

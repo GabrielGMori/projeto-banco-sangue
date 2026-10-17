@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:projeto_banco_sangue/model/auth/authenticator.dart';
 import 'package:projeto_banco_sangue/views/donations/home_page.dart';
+import 'package:projeto_banco_sangue/views/users/user_table.dart';
 
 import '../model/auth/user.dart';
 import 'auth/login.dart';
 
 class ItaoScaffold extends StatelessWidget {
   final Widget child;
-  AppFloatingActionsButton? floatingActionButton;
+  Widget? floatingActionButton;
   final storage = const FlutterSecureStorage();
 
   ItaoScaffold({super.key, required this.child, this.floatingActionButton});
@@ -142,7 +143,7 @@ class ItaoScaffold extends StatelessWidget {
                   title: const Text('Usuários'),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
+                    MaterialPageRoute(builder: (context) => UserTable()),
                   ),
                 ),
                 ListTile(
