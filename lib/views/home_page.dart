@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation_dao.dart';
+import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
+import 'package:projeto_banco_sangue/model/donation_site/donation_site_dao.dart';
 import 'package:projeto_banco_sangue/views/blood_donation/blood_form.dart';
 import 'package:projeto_banco_sangue/views/blood_donation/filters.dart';
 import 'package:projeto_banco_sangue/views/blood_donation/use_form.dart';
-import 'package:projeto_banco_sangue/views/map_test.dart';
 
 import 'blood_donation/blood_tile.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key, donations});
-  final BloodDonationDao dao = BloodDonationDao();
+  final BloodDonationDao bloodDonationDao = BloodDonationDao();
+  final DonationSiteDao donationSiteDao = DonationSiteDao();
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,6 +21,50 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   BloodType selectedType = BloodType.A;
   RhFactor selectedFactor = RhFactor.positive;
+  DonationSite? selectedSite;
+  List<BloodDonation> donations = [];
+  List<DonationSite> sites = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  Future<void> _reload() async {
+    try {
+      final sites = await widget.donationSiteDao.getSites();
+
+      DonationSite? currentSite;
+      for (final site in sites) {
+        if (site.id == selectedSite?.id) {
+          currentSite = site;
+        }
+      }
+
+      final donations = await widget.bloodDonationDao.getDonations(
+        selectedFactor,
+        selectedType,
+        currentSite,
+      );
+      if (!mounted) return;
+      setState(() {
+        this.sites = sites;
+        this.donations = donations;
+        selectedSite = currentSite;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao carregar: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,74 +89,84 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: Theme.of(context).colorScheme.surfaceTint,
       ),
-      floatingActionButton: AppFloatingActionsButton(
-        onChanged: () => setState(() {}),
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            FiltersDropdown(
-              selectedType: selectedType,
-              selectedFactor: selectedFactor,
-              onChanged: (type, factor) {
-                setState(() {
-                  selectedType = type;
-                  selectedFactor = factor;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: FutureBuilder<List<BloodDonation>>(
-                future: widget.dao.getDonations(selectedFactor, selectedType),
-                builder: (context, snapshot) {
-                  final donations = snapshot.data ?? [];
-
-                  if (donations.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Nenhuma doação encontrada para este filtro.',
+      floatingActionButton: AppFloatingActionsButton(onChanged: _reload),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Center(
+              child: Column(
+                children: [
+                  FiltersDropdown(
+                    selectedType: selectedType,
+                    selectedFactor: selectedFactor,
+                    selectedSite: selectedSite,
+                    sites: sites,
+                    onChanged:
+                        ({
+                          type = BloodType.A,
+                          factor = RhFactor.positive,
+                          site,
+                        }) {
+                          setState(() {
+                            selectedType = type;
+                            selectedFactor = factor;
+                            selectedSite = site;
+                          });
+                        },
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: FutureBuilder<List<BloodDonation>>(
+                      future: widget.bloodDonationDao.getDonations(
+                        selectedFactor,
+                        selectedType,
+                        selectedSite,
                       ),
-                    );
-                  }
+                      builder: (context, snapshot) {
+                        final donations = snapshot.data ?? [];
 
-                  return ListView.builder(
-                    itemCount: donations.length,
-                    itemBuilder: (context, index) {
-                      final donation = donations[index];
-                      return BloodTile(
-                        donation: donation,
-                        onDelete: deleteDonation,
-                        onEdit: editDonation,
-                        onChangeStatus: onChangeStatus,
-                      );
-                    },
-                  );
-                },
+                        if (donations.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              'Nenhuma doação encontrada para este filtro.',
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          itemCount: donations.length,
+                          itemBuilder: (context, index) {
+                            final donation = donations[index];
+                            return BloodTile(
+                              donation: donation,
+                              onDelete: deleteDonation,
+                              onEdit: editDonation,
+                              onChangeStatus: onChangeStatus,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
   void deleteDonation(BloodDonation donation) async {
-    await widget.dao.remove(donation);
-    setState(() {});
+    await widget.bloodDonationDao.remove(donation);
+    _reload();
   }
 
   void editDonation(BloodDonation donation) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MapTestScreen(),
-      ), // FormScreen(donation: donation)),
+      MaterialPageRoute(builder: (context) => FormScreen(donation: donation)),
     );
     if (result != null) {
-      await widget.dao.update(result);
-      setState(() {});
+      await widget.bloodDonationDao.update(result);
     }
+    _reload();
   }
 
   void onChangeStatus(BloodDonation donation) async {
@@ -121,14 +177,14 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     if (result != null) {
-      await widget.dao.update(result);
-      setState(() {});
+      await widget.bloodDonationDao.update(result);
     }
+    _reload();
   }
 }
 
 class AppFloatingActionsButton extends StatefulWidget {
-  final BloodDonationDao dao = BloodDonationDao();
+  final BloodDonationDao bloodDonationDao = BloodDonationDao();
   final VoidCallback onChanged;
 
   AppFloatingActionsButton({super.key, required this.onChanged});
@@ -148,7 +204,7 @@ class _AppFloatingActionsButtonState extends State<AppFloatingActionsButton> {
           MaterialPageRoute(builder: (context) => FormScreen()),
         );
         if (result != null) {
-          await widget.dao.add(result);
+          await widget.bloodDonationDao.add(result);
           widget.onChanged();
         }
       },

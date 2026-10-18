@@ -1,5 +1,6 @@
 import 'package:projeto_banco_sangue/database/database_helper.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
+import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
 import 'package:sqflite/sqflite.dart';
 
 class BloodDonationDao {
@@ -8,14 +9,24 @@ class BloodDonationDao {
   Future<List<BloodDonation>> getDonations(
     RhFactor factor,
     BloodType type,
+    DonationSite? site,
   ) async {
     Database db = await DatabaseHelper.instance.database;
+    String where = "type = ? and rh = ?";
+    List<dynamic> whereArgs = [type.name, factor.name];
+
+    if (site != null) {
+      where += " and donation_site_id = ?";
+      whereArgs.add(site.id);
+    }
+
     var donations = await db.query(
       'blood_donations',
       orderBy: 'used ASC, date_donation DESC, id DESC',
-      where: "type = ? and rh = ?",
-      whereArgs: [type.name, factor.name],
+      where: where,
+      whereArgs: whereArgs,
     );
+
     List<BloodDonation> donationsList = donations.isNotEmpty
         ? donations.map((item) => BloodDonation.fromMap(item)).toList()
         : [];

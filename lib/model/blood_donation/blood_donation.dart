@@ -12,6 +12,8 @@ class BloodDonation {
   String? grantee;
   DateTime? dateUsed;
 
+  int donationSiteId;
+
   BloodDonation({
     this.id,
     required this.type,
@@ -21,6 +23,7 @@ class BloodDonation {
     this.used = false,
     this.grantee,
     this.dateUsed,
+    required this.donationSiteId,
   }) : dateDonation = dateDonation ?? DateTime.now();
 
   void use(String grantee, DateTime? dateUsed) {
@@ -52,6 +55,7 @@ class BloodDonation {
     dateUsed: json['date_used'] != null
         ? DateTime.parse(json['date_used'])
         : null,
+    donationSiteId: json['donation_site_id'],
   );
 
   Map<String, dynamic> toMap() => {
@@ -63,5 +67,6 @@ class BloodDonation {
     'used': used ? 1 : 0,
     'grantee': grantee,
     'date_used': dateUsed?.toIso8601String(),
+    'donation_site_id': donationSiteId,
   };
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
+import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
+import 'package:projeto_banco_sangue/model/donation_site/donation_site_dao.dart';
 import 'package:projeto_banco_sangue/views/blood_donation/type_row.dart';
+import 'package:projeto_banco_sangue/views/donation_site/site_map.dart';
 
 class FormScreen extends StatelessWidget {
   BloodDonation? donation;
@@ -37,6 +40,7 @@ class FormScreen extends StatelessWidget {
 
 class BloodForm extends StatefulWidget {
   BloodDonation? donation;
+  DonationSiteDao siteDao = DonationSiteDao();
 
   BloodForm({super.key, this.donation});
 
@@ -52,6 +56,8 @@ class _BloodFormState extends State<BloodForm> {
   BloodType? selectedType = BloodType.A;
   RhFactor? selectedFactor = RhFactor.positive;
   DateTime? _selectedDateTime;
+  DonationSite? _selectedDonationSite;
+  String? _siteError;
 
   @override
   void initState() {
@@ -62,6 +68,7 @@ class _BloodFormState extends State<BloodForm> {
       selectedFactor = widget.donation!.rh;
       selectedType = widget.donation!.type;
       _selectedDateTime = widget.donation!.dateDonation;
+      _loadDonationSite();
     } else {
       _selectedDateTime = DateTime.now();
     }
@@ -74,6 +81,15 @@ class _BloodFormState extends State<BloodForm> {
     _donatorController.dispose();
     _dateTimeDonationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadDonationSite() async {
+    if (widget.donation?.donationSiteId != null) {
+      DonationSite? site = await widget.siteDao.findById(
+        widget.donation!.donationSiteId,
+      );
+      setState(() => _selectedDonationSite = site);
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -91,6 +107,29 @@ class _BloodFormState extends State<BloodForm> {
             "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}";
       });
     }
+  }
+
+  Future<void> _selectDonationSite(BuildContext context) async {
+    final DonationSite? selected = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DonationSiteMap()),
+    );
+    if (!mounted) return;
+
+    if (selected != null) {
+      setState(() {
+        _selectedDonationSite = selected;
+        _siteError = null;
+      });
+      return;
+    }
+
+    final currentId = _selectedDonationSite?.id;
+    if (currentId == null) return;
+
+    final fresh = await widget.siteDao.findById(currentId);
+    if (!mounted) return;
+    setState(() => _selectedDonationSite = fresh);
   }
 
   @override
@@ -145,9 +184,39 @@ class _BloodFormState extends State<BloodForm> {
                   });
                 },
               ),
+              Row(
+                spacing: 10,
+                children: [
+                  TextButton(
+                    onPressed: () => _selectDonationSite(context),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.inversePrimary,
+                    ),
+                    child: Text(
+                      "Selecione um posto de doação",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.scrim,
+                      ),
+                    ),
+                  ),
+                  Text(_selectedDonationSite?.nome ?? 'Nenhum selecionado'),
+                ],
+              ),
+              if (_siteError != null)
+                Text(
+                  _siteError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ElevatedButton(
                 onPressed: () {
-                  if (_formKey.currentState!.validate()) {
+                  if (_selectedDonationSite == null) {
+                    _formKey.currentState!.validate();
+                    setState(() {
+                      _siteError = 'Selecione um posto de doação';
+                    });
+                  } else if (_formKey.currentState!.validate()) {
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(const SnackBar(content: Text('Salvando')));
@@ -159,6 +228,7 @@ class _BloodFormState extends State<BloodForm> {
                         donator: _donatorController.text,
                         rh: selectedFactor ?? RhFactor.positive,
                         dateDonation: _selectedDateTime,
+                        donationSiteId: _selectedDonationSite!.id!,
                       ),
                     );
                   }

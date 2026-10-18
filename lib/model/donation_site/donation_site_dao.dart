@@ -1,26 +1,24 @@
 import 'package:projeto_banco_sangue/database/database_helper.dart';
-import 'package:projeto_banco_sangue/model/donation_site.dart/donation_site.dart';
+import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DonationSiteDao {
   const DonationSiteDao();
 
-  /// Retorna todos os postos cadastrados no banco de dados ordenados por nome
   Future<List<DonationSite>> getSites() async {
     Database db = await DatabaseHelper.instance.database;
-    var sites = await db.query('donation_sites', orderBy: 'nome ASC');
+    var sites = await db.query('donation_sites');
     List<DonationSite> sitesList = sites.isNotEmpty
         ? sites.map((item) => DonationSite.fromMap(item)).toList()
         : [];
     return sitesList;
   }
 
-  /// Busca um posto pelo seu identificador primário 'id'
   Future<DonationSite?> findById(int id) async {
     Database db = await DatabaseHelper.instance.database;
     var query = await db.query(
       'donation_sites',
-      where: 'id = ?',
+      where: "id = ?",
       whereArgs: [id],
     );
     if (query.isNotEmpty) {
@@ -29,21 +27,14 @@ class DonationSiteDao {
     return null;
   }
 
-  /// Adiciona um novo posto ou atualiza caso o 'id' já exista
-  Future<int> add(DonationSite site) async {
+  Future<int> add(DonationSite newSite) async {
     Database db = await DatabaseHelper.instance.database;
-    var existing = await findById(site.id);
-    if (existing != null) {
-      return await update(site);
+    if (newSite.id != null && newSite.id! > 0) {
+      return await update(newSite);
     }
-    return await db.insert(
-      'donation_sites',
-      site.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return await db.insert('donation_sites', newSite.toMap());
   }
 
-  /// Remove um posto cadastrado utilizando o 'id'
   Future<int> remove(DonationSite site) async {
     Database db = await DatabaseHelper.instance.database;
     return await db.delete(
@@ -53,7 +44,6 @@ class DonationSiteDao {
     );
   }
 
-  /// Atualiza os dados de um posto de doação
   Future<int> update(DonationSite site) async {
     Database db = await DatabaseHelper.instance.database;
     return await db.update(
@@ -62,5 +52,14 @@ class DonationSiteDao {
       where: 'id = ?',
       whereArgs: [site.id],
     );
+  }
+
+  Future<int> countDonations(int id) async {
+    final db = await DatabaseHelper.instance.database;
+    final result = await db.rawQuery(
+      'select count(*) as total from blood_donations where donation_site_id = ?',
+      [id],
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 }

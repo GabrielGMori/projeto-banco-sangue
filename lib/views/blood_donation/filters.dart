@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
+import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
 
 const List<BloodType> types = BloodType.values;
 const List<RhFactor> rh = RhFactor.values;
@@ -7,13 +8,18 @@ const List<RhFactor> rh = RhFactor.values;
 class FiltersDropdown extends StatefulWidget {
   BloodType? selectedType = BloodType.A;
   RhFactor? selectedFactor = RhFactor.positive;
-  final Function(BloodType, RhFactor)? onChanged;
+  DonationSite? selectedSite;
+  List<DonationSite> sites;
+  final Function({BloodType type, RhFactor factor, DonationSite? site})?
+  onChanged;
 
   FiltersDropdown({
     super.key,
     this.selectedFactor,
     this.selectedType,
     this.onChanged,
+    this.selectedSite,
+    this.sites = const [],
   });
 
   @override
@@ -33,14 +39,16 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
       children: [
-        Column(
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Padding(
               padding: EdgeInsets.all(8.0),
-              child: Text("Tipo sanguíneo", style: TextStyle(fontSize: 20)),
+              child: Text("Tipo sanguíneo", style: TextStyle(fontSize: 16)),
             ),
+            SizedBox(width: 10),
             DropdownButton<BloodType>(
               value: dropdownTypeValue,
               icon: const Icon(Icons.arrow_downward),
@@ -49,8 +57,9 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
                 if (newValue != null) {
                   dropdownTypeValue = newValue;
                   widget.onChanged?.call(
-                    newValue,
-                    widget.selectedFactor ?? RhFactor.positive,
+                    type: newValue,
+                    factor: widget.selectedFactor ?? RhFactor.positive,
+                    site: widget.selectedSite,
                   );
                 }
               },
@@ -63,12 +72,15 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
             ),
           ],
         ),
-        Column(
+        SizedBox(width: 16),
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Padding(
               padding: EdgeInsets.all(8.0),
-              child: Text("Fator RH", style: TextStyle(fontSize: 20)),
+              child: Text("Fator RH", style: TextStyle(fontSize: 16)),
             ),
+            SizedBox(width: 10),
             DropdownButton<RhFactor>(
               value: dropdownRHValue,
               icon: const Icon(Icons.arrow_downward),
@@ -77,8 +89,9 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
                 if (newValue != null) {
                   dropdownRHValue = newValue;
                   widget.onChanged?.call(
-                    widget.selectedType ?? BloodType.A,
-                    newValue,
+                    type: widget.selectedType ?? BloodType.A,
+                    factor: newValue,
+                    site: widget.selectedSite,
                   );
                 }
               },
@@ -90,6 +103,41 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
                   ),
                 );
               }).toList(),
+            ),
+          ],
+        ),
+        SizedBox(width: 16),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("Posto de Doação", style: TextStyle(fontSize: 16)),
+            ),
+            SizedBox(width: 10),
+            DropdownButton<DonationSite?>(
+              value: widget.selectedSite,
+              icon: const Icon(Icons.arrow_downward),
+              elevation: 16,
+              onChanged: (DonationSite? newValue) {
+                widget.onChanged?.call(
+                  type: widget.selectedType ?? BloodType.A,
+                  factor: widget.selectedFactor ?? RhFactor.positive,
+                  site: newValue,
+                );
+              },
+              items: [
+                const DropdownMenuItem<DonationSite?>(
+                  value: null,
+                  child: Text("Todos"),
+                ),
+                ...widget.sites.map(
+                  (site) => DropdownMenuItem<DonationSite?>(
+                    value: site,
+                    child: Text(site.nome),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

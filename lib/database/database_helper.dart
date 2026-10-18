@@ -26,19 +26,6 @@ class DatabaseHelper {
 
   Future _createDb(Database db, int version) async {
     await db.execute('''
-      create table blood_donations (
-        id integer primary key autoincrement,
-        type text not null,
-        rh text not null,
-        donator text not null,
-        date_donation text not null default CURRENT_TIMESTAMP,
-        used integer not null default 0,
-        grantee text,
-        date_used text
-      )
-    ''');
-
-    await db.execute('''
       create table donation_sites (
         id integer primary key autoincrement,
         nome text not null,
@@ -47,19 +34,22 @@ class DatabaseHelper {
         longitude real not null
       )
     ''');
+
+    await db.execute('''
+      create table blood_donations (
+        id integer primary key autoincrement,
+        type text not null,
+        rh text not null,
+        donator text not null,
+        date_donation text not null default CURRENT_TIMESTAMP,
+        used integer not null default 0,
+        grantee text,
+        date_used text,
+        donation_site_id integer not null,
+        foreign key (donation_site_id) references donation_sites(id) on update cascade on delete restrict
+      )
+    ''');
   }
 
-  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('''
-        create table donation_sites (
-          id integer primary key autoincrement,
-          nome text not null,
-          endereco text not null,
-          latitude real not null,
-          longitude real not null
-        )
-      ''');
-    }
-  }
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {}
 }
