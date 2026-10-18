@@ -48,7 +48,7 @@ class DatabaseHelper {
 
     String hashedPassword = BCrypt.hashpw('1', BCrypt.gensalt());
     await db.execute(
-      'insert into users(id, name, password) values (1, "josé", "$hashedPassword")',
+      'insert into users(id, name, password) values (1, "ADMIN", "$hashedPassword")',
     );
   }
 }

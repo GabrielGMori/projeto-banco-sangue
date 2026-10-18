@@ -64,85 +64,89 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            spacing: 20,
-            children: [
-              TextFormField(
-                controller: _registrationController,
-                keyboardType: TextInputType.numberWithOptions(
-                  decimal: false,
-                  signed: false,
-                ),
-                decoration: const InputDecoration(
-                  label: Text("Insira a matrícula"),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Digite o número de matrícula';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                enableSuggestions: false,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Digite a senha';
-                  }
-                  return null;
-                },
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    bool authenticated = await Authenticator().authenticate(
-                      _registrationController.text,
-                      _passwordController.text,
-                    );
-
-                    if (!authenticated) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Icon(Icons.error, color: Theme.of(context).colorScheme.surface,),
-                              const SizedBox(width: 10,),
-                              const Expanded(
-                                child: Text(
-                                  'Matrícula ou senha inválidos, tente novamente.',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      );
-                      return;
+    return Center(
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 20,
+              children: [
+                TextFormField(
+                  controller: _registrationController,
+                  keyboardType: TextInputType.numberWithOptions(
+                    decimal: false,
+                    signed: false,
+                  ),
+                  decoration: const InputDecoration(
+                    label: Text("Insira a matrícula"),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Digite o número de matrícula';
                     }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Digite a senha';
+                    }
+                    return null;
+                  },
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      bool authenticated = await Authenticator().authenticate(
+                        _registrationController.text,
+                        _passwordController.text,
+                      );
 
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => AuthMiddleware()),
-                    );
-                  }
-                },
-                child: const Text("Salvar doação de sangue"),
-              ),
-            ],
+                      if (!authenticated) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(Icons.error, color: Theme.of(context).colorScheme.surface,),
+                                const SizedBox(width: 10,),
+                                const Expanded(
+                                  child: Text(
+                                    'Matrícula ou senha inválidos, tente novamente.',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                        return;
+                      }
+
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => AuthMiddleware()),
+                      );
+                    }
+                  },
+                  child: const Text("Fazer login"),
+                ),
+              ],
+            ),
           ),
         ),
       ),

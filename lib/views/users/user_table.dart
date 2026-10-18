@@ -5,6 +5,7 @@ import 'package:projeto_banco_sangue/model/blood_donation/blood_donation_dao.dar
 import 'package:projeto_banco_sangue/views/donations/blood_form.dart';
 import 'package:projeto_banco_sangue/views/components/filters.dart';
 import 'package:projeto_banco_sangue/views/donations/use_form.dart';
+import 'package:projeto_banco_sangue/views/users/user_form.dart';
 
 import '../../model/auth/user.dart';
 import '../itao_scaffold.dart';
@@ -89,7 +90,7 @@ class _UserTableState extends State<UserTable> {
 }
 
 class UserFloatingActionsButton extends StatefulWidget {
-  final BloodDonationDao dao = BloodDonationDao();
+  final AuthDAO dao = AuthDAO();
   final VoidCallback onChanged;
 
   UserFloatingActionsButton({super.key, required this.onChanged});
@@ -106,7 +107,7 @@ class _UserFloatingActionsButtonState extends State<UserFloatingActionsButton> {
       onPressed: () async {
         final result = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => FormScreen()),
+          MaterialPageRoute(builder: (context) => UserFormScreen()),
         );
         if (result != null) {
           await widget.dao.add(result);

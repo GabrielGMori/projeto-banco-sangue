@@ -22,9 +22,6 @@ class AuthDAO {
 
   Future<int> add(User newUser) async {
     Database db = await DatabaseHelper.instance.database;
-    if (newUser.id > 0) {
-      return await update(newUser);
-    }
     return await db.insert('users', newUser.toMap());
   }
 
