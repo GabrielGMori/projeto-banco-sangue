@@ -19,8 +19,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  BloodType selectedType = BloodType.A;
-  RhFactor selectedFactor = RhFactor.positive;
+  BloodType? selectedType;
+  RhFactor? selectedFactor;
   DonationSite? selectedSite;
   List<BloodDonation> donations = [];
   List<DonationSite> sites = [];
@@ -73,63 +73,63 @@ class _HomePageState extends State<HomePage> {
       child: _loading
           ? const Center(child: CircularProgressIndicator())
           : Center(
-              child: Column(
-                children: [
-                  FiltersDropdown(
-                    selectedType: selectedType,
-                    selectedFactor: selectedFactor,
-                    selectedSite: selectedSite,
-                    sites: sites,
-                    onChanged:
-                        ({
-                          type = BloodType.A,
-                          factor = RhFactor.positive,
-                          site,
-                        }) {
-                          setState(() {
-                            selectedType = type;
-                            selectedFactor = factor;
-                            selectedSite = site;
-                          });
-                        },
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: FutureBuilder<List<BloodDonation>>(
-                      future: widget.bloodDonationDao.getDonations(
-                        selectedFactor,
-                        selectedType,
-                        selectedSite,
+        child: Column(
+          children: [
+            FiltersDropdown(
+              selectedType: selectedType,
+              selectedFactor: selectedFactor,
+              selectedSite: selectedSite,
+              sites: sites,
+              onChanged:
+                  ({
+                BloodType? type,
+                RhFactor? factor,
+                DonationSite? site,
+              }) {
+                setState(() {
+                  selectedType = type;
+                  selectedFactor = factor;
+                  selectedSite = site;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: FutureBuilder<List<BloodDonation>>(
+                future: widget.bloodDonationDao.getDonations(
+                  selectedFactor,
+                  selectedType,
+                  selectedSite,
+                ),
+                builder: (context, snapshot) {
+                  final donations = snapshot.data ?? [];
+
+                  if (donations.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'Nenhuma doação encontrada para este filtro.',
                       ),
-                      builder: (context, snapshot) {
-                        final donations = snapshot.data ?? [];
+                    );
+                  }
 
-                        if (donations.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'Nenhuma doação encontrada para este filtro.',
-                            ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          itemCount: donations.length,
-                          itemBuilder: (context, index) {
-                            final donation = donations[index];
-                            return BloodTile(
-                              donation: donation,
-                              onDelete: deleteDonation,
-                              onEdit: editDonation,
-                              onChangeStatus: onChangeStatus,
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  return ListView.builder(
+                    itemCount: donations.length,
+                    itemBuilder: (context, index) {
+                      final donation = donations[index];
+                      return BloodTile(
+                        donation: donation,
+                        onDelete: deleteDonation,
+                        onEdit: editDonation,
+                        onChangeStatus: onChangeStatus,
+                      );
+                    },
+                  );
+                },
               ),
             ),
+          ],
+        ),
+      ),
     );
   }
 

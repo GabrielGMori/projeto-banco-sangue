@@ -6,11 +6,11 @@ const List<BloodType> types = BloodType.values;
 const List<RhFactor> rh = RhFactor.values;
 
 class FiltersDropdown extends StatefulWidget {
-  BloodType? selectedType = BloodType.A;
-  RhFactor? selectedFactor = RhFactor.positive;
+  BloodType? selectedType;
+  RhFactor? selectedFactor;
   DonationSite? selectedSite;
   List<DonationSite> sites;
-  final Function({BloodType type, RhFactor factor, DonationSite? site})?
+  final Function({BloodType? type, RhFactor? factor, DonationSite? site})?
   onChanged;
 
   FiltersDropdown({
@@ -27,14 +27,14 @@ class FiltersDropdown extends StatefulWidget {
 }
 
 class _FiltersDropdownState extends State<FiltersDropdown> {
-  BloodType dropdownTypeValue = types.first;
-  RhFactor dropdownRHValue = rh.first;
+  BloodType? dropdownTypeValue;
+  RhFactor? dropdownRHValue;
 
   @override
   void initState() {
     super.initState();
-    dropdownTypeValue = widget.selectedType ?? types.first;
-    dropdownRHValue = widget.selectedFactor ?? rh.first;
+    dropdownTypeValue = widget.selectedType;
+    dropdownRHValue = widget.selectedFactor;
   }
 
   @override
@@ -49,26 +49,32 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
               child: Text("Tipo sanguíneo", style: TextStyle(fontSize: 16)),
             ),
             SizedBox(width: 10),
-            DropdownButton<BloodType>(
+            DropdownButton<BloodType?>(
               value: dropdownTypeValue,
               icon: const Icon(Icons.arrow_downward),
               elevation: 16,
               onChanged: (BloodType? newValue) {
-                if (newValue != null) {
+                setState(() {
                   dropdownTypeValue = newValue;
-                  widget.onChanged?.call(
-                    type: newValue,
-                    factor: widget.selectedFactor ?? RhFactor.positive,
-                    site: widget.selectedSite,
-                  );
-                }
-              },
-              items: types.map<DropdownMenuItem<BloodType>>((BloodType value) {
-                return DropdownMenuItem<BloodType>(
-                  value: value,
-                  child: Text(value.name),
+                });
+                widget.onChanged?.call(
+                  type: newValue,
+                  factor: dropdownRHValue,
+                  site: widget.selectedSite,
                 );
-              }).toList(),
+              },
+              items: [
+                const DropdownMenuItem<BloodType?>(
+                  value: null,
+                  child: Text("Todos"),
+                ),
+                ...types.map<DropdownMenuItem<BloodType?>>((BloodType value) {
+                  return DropdownMenuItem<BloodType?>(
+                    value: value,
+                    child: Text(value.name),
+                  );
+                }),
+              ],
             ),
           ],
         ),
@@ -81,28 +87,34 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
               child: Text("Fator RH", style: TextStyle(fontSize: 16)),
             ),
             SizedBox(width: 10),
-            DropdownButton<RhFactor>(
+            DropdownButton<RhFactor?>(
               value: dropdownRHValue,
               icon: const Icon(Icons.arrow_downward),
               elevation: 16,
               onChanged: (RhFactor? newValue) {
-                if (newValue != null) {
+                setState(() {
                   dropdownRHValue = newValue;
-                  widget.onChanged?.call(
-                    type: widget.selectedType ?? BloodType.A,
-                    factor: newValue,
-                    site: widget.selectedSite,
-                  );
-                }
-              },
-              items: rh.map<DropdownMenuItem<RhFactor>>((RhFactor value) {
-                return DropdownMenuItem<RhFactor>(
-                  value: value,
-                  child: Text(
-                    value == RhFactor.positive ? 'Positivo' : 'Negativo',
-                  ),
+                });
+                widget.onChanged?.call(
+                  type: dropdownTypeValue,
+                  factor: newValue,
+                  site: widget.selectedSite,
                 );
-              }).toList(),
+              },
+              items: [
+                const DropdownMenuItem<RhFactor?>(
+                  value: null,
+                  child: Text("Todos"),
+                ),
+                ...rh.map<DropdownMenuItem<RhFactor?>>((RhFactor value) {
+                  return DropdownMenuItem<RhFactor?>(
+                    value: value,
+                    child: Text(
+                      value == RhFactor.positive ? 'Positivo' : 'Negativo',
+                    ),
+                  );
+                }),
+              ],
             ),
           ],
         ),
@@ -121,8 +133,8 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
               elevation: 16,
               onChanged: (DonationSite? newValue) {
                 widget.onChanged?.call(
-                  type: widget.selectedType ?? BloodType.A,
-                  factor: widget.selectedFactor ?? RhFactor.positive,
+                  type: dropdownTypeValue,
+                  factor: dropdownRHValue,
                   site: newValue,
                 );
               },
@@ -132,7 +144,7 @@ class _FiltersDropdownState extends State<FiltersDropdown> {
                   child: Text("Todos"),
                 ),
                 ...widget.sites.map(
-                  (site) => DropdownMenuItem<DonationSite?>(
+                      (site) => DropdownMenuItem<DonationSite?>(
                     value: site,
                     child: Text(site.nome),
                   ),

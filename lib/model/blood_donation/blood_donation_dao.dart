@@ -7,24 +7,37 @@ class BloodDonationDao {
   const BloodDonationDao();
 
   Future<List<BloodDonation>> getDonations(
-    RhFactor factor,
-    BloodType type,
-    DonationSite? site,
-  ) async {
+      RhFactor? factor,
+      BloodType? type,
+      DonationSite? site,
+      ) async {
     Database db = await DatabaseHelper.instance.database;
-    String where = "type = ? and rh = ?";
-    List<dynamic> whereArgs = [type.name, factor.name];
+
+    List<String> conditions = [];
+    List<dynamic> whereArgs = [];
+
+    if (type != null) {
+      conditions.add("type = ?");
+      whereArgs.add(type.name);
+    }
+
+    if (factor != null) {
+      conditions.add("rh = ?");
+      whereArgs.add(factor.name);
+    }
 
     if (site != null) {
-      where += " and donation_site_id = ?";
+      conditions.add("donation_site_id = ?");
       whereArgs.add(site.id);
     }
+
+    String? where = conditions.isNotEmpty ? conditions.join(" and ") : null;
 
     var donations = await db.query(
       'blood_donations',
       orderBy: 'used ASC, date_donation DESC, id DESC',
       where: where,
-      whereArgs: whereArgs,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
     );
 
     List<BloodDonation> donationsList = donations.isNotEmpty
