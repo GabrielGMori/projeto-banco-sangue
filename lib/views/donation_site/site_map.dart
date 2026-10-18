@@ -8,7 +8,8 @@ import 'package:projeto_banco_sangue/views/donation_site/site_form.dart';
 import 'package:projeto_banco_sangue/views/donation_site/site_info.dart';
 
 class DonationSiteMap extends StatefulWidget {
-  DonationSiteMap({super.key});
+  DonationSiteMap({super.key, this.canSelect = false});
+  final bool canSelect;
   final DonationSiteDao dao = DonationSiteDao();
 
   @override
@@ -100,7 +101,8 @@ class _DonationSiteMapState extends State<DonationSiteMap> {
   Future<void> _onSiteMarkerTap(DonationSite site) async {
     final SiteAction? action = await showModalBottomSheet<SiteAction>(
       context: context,
-      builder: (context) => DonationSiteInfo(site: site),
+      builder: (context) =>
+          DonationSiteInfo(site: site, canSelect: widget.canSelect),
     );
 
     if (!mounted || action == SiteAction.cancel) return;
@@ -155,6 +157,7 @@ class _DonationSiteMapState extends State<DonationSiteMap> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
         titleSpacing: 20,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +167,7 @@ class _DonationSiteMapState extends State<DonationSiteMap> {
               style: TextStyle(color: Theme.of(context).colorScheme.surface),
             ),
             Text(
-              "Postos disponíveis",
+              "Banco de doação de sangue",
               style: TextStyle(
                 color: Theme.of(context).colorScheme.surface,
                 fontSize: 16,

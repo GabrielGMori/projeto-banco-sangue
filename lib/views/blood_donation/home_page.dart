@@ -4,10 +4,10 @@ import 'package:projeto_banco_sangue/model/blood_donation/blood_donation_dao.dar
 import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
 import 'package:projeto_banco_sangue/model/donation_site/donation_site_dao.dart';
 import 'package:projeto_banco_sangue/views/blood_donation/blood_form.dart';
-import 'package:projeto_banco_sangue/views/blood_donation/filters.dart';
+import 'package:projeto_banco_sangue/views/blood_donation/blood_tile.dart';
 import 'package:projeto_banco_sangue/views/blood_donation/use_form.dart';
-
-import 'blood_donation/blood_tile.dart';
+import 'package:projeto_banco_sangue/views/components/filters.dart';
+import 'package:projeto_banco_sangue/views/itao_scaffold.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key, donations});
@@ -68,29 +68,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 20,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Itaó+",
-              style: TextStyle(color: Theme.of(context).colorScheme.surface),
-            ),
-            Text(
-              "Banco de doação de sangue",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.surface,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surfaceTint,
-      ),
+    return ItaoScaffold(
       floatingActionButton: AppFloatingActionsButton(onChanged: _reload),
-      body: _loading
+      child: _loading
           ? const Center(child: CircularProgressIndicator())
           : Center(
               child: Column(

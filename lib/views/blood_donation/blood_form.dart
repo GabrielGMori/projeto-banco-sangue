@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
 import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
 import 'package:projeto_banco_sangue/model/donation_site/donation_site_dao.dart';
-import 'package:projeto_banco_sangue/views/blood_donation/type_row.dart';
+import 'package:projeto_banco_sangue/views/components/type_row.dart';
 import 'package:projeto_banco_sangue/views/donation_site/site_map.dart';
 
 class FormScreen extends StatelessWidget {
@@ -14,6 +14,7 @@ class FormScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
         titleSpacing: 20,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +113,7 @@ class _BloodFormState extends State<BloodForm> {
   Future<void> _selectDonationSite(BuildContext context) async {
     final DonationSite? selected = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => DonationSiteMap()),
+      MaterialPageRoute(builder: (context) => DonationSiteMap(canSelect: true)),
     );
     if (!mounted) return;
 

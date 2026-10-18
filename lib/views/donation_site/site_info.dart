@@ -4,8 +4,13 @@ import 'package:projeto_banco_sangue/model/donation_site/donation_site.dart';
 enum SiteAction { select, cancel, delete, edit }
 
 class DonationSiteInfo extends StatelessWidget {
-  const DonationSiteInfo({super.key, required this.site});
+  const DonationSiteInfo({
+    super.key,
+    required this.site,
+    this.canSelect = false,
+  });
   final DonationSite site;
+  final bool canSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +57,11 @@ class DonationSiteInfo extends StatelessWidget {
                 child: const Text("Voltar"),
               ),
               SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, SiteAction.select),
-                child: const Text("Selecionar"),
-              ),
+              if (canSelect)
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, SiteAction.select),
+                  child: const Text("Selecionar"),
+                ),
             ],
           ),
         ],

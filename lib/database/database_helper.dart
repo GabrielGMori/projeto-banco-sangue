@@ -1,3 +1,4 @@
+import 'package:bcrypt/bcrypt.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -49,6 +50,19 @@ class DatabaseHelper {
         foreign key (donation_site_id) references donation_sites(id) on update cascade on delete restrict
       )
     ''');
+
+    await db.execute('''
+      create table users (
+        id integer primary key,
+        name text not null,
+        password text not null
+      )
+    ''');
+
+    String hashedPassword = BCrypt.hashpw('1', BCrypt.gensalt());
+    await db.execute(
+      'insert into users(id, name, password) values (1, "ADMIN", "$hashedPassword")',
+    );
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {}
