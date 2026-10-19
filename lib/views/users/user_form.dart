@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_banco_sangue/model/auth/auth_dao.dart';
-import 'package:projeto_banco_sangue/model/auth/authenticator.dart';
-import 'package:projeto_banco_sangue/model/blood_donation/blood_donation.dart';
+import 'package:projeto_banco_sangue/services/authenticator.dart';
 
 import '../../model/auth/user.dart';
 
 class UserFormScreen extends StatelessWidget {
-
-  UserFormScreen({super.key});
+  const UserFormScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +37,7 @@ class UserFormScreen extends StatelessWidget {
 }
 
 class UserForm extends StatefulWidget {
-  UserForm({super.key});
+  const UserForm({super.key});
 
   @override
   State<UserForm> createState() => _UserFormState();
@@ -79,10 +77,11 @@ class _UserFormState extends State<UserForm> {
             children: [
               TextFormField(
                 controller: _registrationController,
-                keyboardType: TextInputType.numberWithOptions(signed: false, decimal: false),
-                decoration: const InputDecoration(
-                  label: Text("Matrícula"),
+                keyboardType: TextInputType.numberWithOptions(
+                  signed: false,
+                  decimal: false,
                 ),
+                decoration: const InputDecoration(label: Text("Matrícula")),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Digite a matrícula';
@@ -95,9 +94,7 @@ class _UserFormState extends State<UserForm> {
               ),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  label: Text("Nome"),
-                ),
+                decoration: const InputDecoration(label: Text("Nome")),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Digite o nome';
@@ -118,9 +115,11 @@ class _UserFormState extends State<UserForm> {
                       return;
                     }
 
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(const SnackBar(content: Text('Salvando, senha padrão 123')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Salvando, senha padrão 123'),
+                      ),
+                    );
 
                     Navigator.pop(
                       context,

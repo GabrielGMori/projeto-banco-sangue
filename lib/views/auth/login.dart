@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:projeto_banco_sangue/model/auth/authenticator.dart';
-import 'package:projeto_banco_sangue/model/auth/user.dart';
+import 'package:projeto_banco_sangue/services/authenticator.dart';
 import 'package:projeto_banco_sangue/views/auth/auth_middleware.dart';
 
 class LoginScreen extends StatelessWidget {
   final FlutterSecureStorage storage;
 
-  LoginScreen({super.key, required this.storage});
+  const LoginScreen({super.key, required this.storage});
 
   @override
   Widget build(BuildContext context) {
@@ -121,17 +120,24 @@ class _LoginViewState extends State<LoginView> {
                           SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.error, color: Theme.of(context).colorScheme.surface,),
-                                const SizedBox(width: 10,),
+                                Icon(
+                                  Icons.error,
+                                  color: Theme.of(context).colorScheme.surface,
+                                ),
+                                const SizedBox(width: 10),
                                 const Expanded(
                                   child: Text(
                                     'Matrícula ou senha inválidos, tente novamente.',
-                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            backgroundColor: Theme.of(context).colorScheme.error,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
                           ),
                         );
                         return;
@@ -139,7 +145,9 @@ class _LoginViewState extends State<LoginView> {
 
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => AuthMiddleware()),
+                        MaterialPageRoute(
+                          builder: (context) => AuthMiddleware(),
+                        ),
                       );
                     }
                   },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:projeto_banco_sangue/model/auth/authenticator.dart';
+import 'package:projeto_banco_sangue/services/authenticator.dart';
 import 'package:projeto_banco_sangue/views/blood_donation/home_page.dart';
 import 'package:projeto_banco_sangue/views/donation_site/site_map.dart';
 import 'package:projeto_banco_sangue/views/users/user_table.dart';
